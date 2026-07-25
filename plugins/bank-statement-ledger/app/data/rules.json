@@ -1,0 +1,219 @@
+{
+  "categories": {
+    "credit": [
+      "Consultancy Fees",
+      "Salary",
+      "S B Interest",
+      "Sales Receipts",
+      "Loan Received",
+      "Other Receipts"
+    ],
+    "debit": [
+      "Educational Expenses",
+      "Personal Expenses",
+      "Fooding",
+      "Supervising Fees",
+      "Telephone",
+      "Travelling/Tickets",
+      "Vehicle & Fuel",
+      "Medical",
+      "Loan EMI",
+      "Insurance policy",
+      "Cash Withdrawal",
+      "Bank Charges",
+      "Misc Expenses"
+    ]
+  },
+  "rules": [
+    {
+      "match": "INFOSYS LIMITED",
+      "field": "counterparty",
+      "category": "Salary",
+      "direction": "CR"
+    },
+    {
+      "match": "SBINT",
+      "field": "channel",
+      "category": "S B Interest",
+      "direction": "CR"
+    },
+    {
+      "match": "INTEREST",
+      "field": "channel",
+      "category": "S B Interest",
+      "direction": "CR"
+    },
+    {
+      "match": "SMS",
+      "field": "channel",
+      "category": "Bank Charges",
+      "direction": "DR"
+    },
+    {
+      "match": "ATM",
+      "field": "channel",
+      "category": "Cash Withdrawal",
+      "direction": "DR"
+    },
+    {
+      "match": "EMI",
+      "field": "channel",
+      "category": "Loan EMI",
+      "direction": "DR"
+    },
+    {
+      "match": "BAJAJFINANCE",
+      "field": "narration",
+      "category": "Loan EMI",
+      "direction": "DR"
+    },
+    {
+      "match": "LIC OF INDIA",
+      "field": "counterparty",
+      "category": "Insurance policy",
+      "direction": "DR"
+    },
+    {
+      "match": "JIO",
+      "field": "counterparty",
+      "category": "Telephone",
+      "direction": "DR"
+    },
+    {
+      "match": "AIRTEL",
+      "field": "counterparty",
+      "category": "Telephone",
+      "direction": "DR"
+    },
+    {
+      "match": "VODAFONE",
+      "field": "counterparty",
+      "category": "Telephone",
+      "direction": "DR"
+    },
+    {
+      "match": "BSNL",
+      "field": "counterparty",
+      "category": "Telephone",
+      "direction": "DR"
+    },
+    {
+      "match": "IRCTC",
+      "field": "counterparty",
+      "category": "Travelling/Tickets",
+      "direction": "DR"
+    },
+    {
+      "match": "REDBUS",
+      "field": "counterparty",
+      "category": "Travelling/Tickets",
+      "direction": "DR"
+    },
+    {
+      "match": "MAKEMYTRIP",
+      "field": "counterparty",
+      "category": "Travelling/Tickets",
+      "direction": "DR"
+    },
+    {
+      "match": "UBER",
+      "field": "counterparty",
+      "category": "Travelling/Tickets",
+      "direction": "DR"
+    },
+    {
+      "match": "OLACABS",
+      "field": "counterparty",
+      "category": "Travelling/Tickets",
+      "direction": "DR"
+    },
+    {
+      "match": "RAPIDO",
+      "field": "counterparty",
+      "category": "Travelling/Tickets",
+      "direction": "DR"
+    },
+    {
+      "match": "PVR INOX",
+      "field": "counterparty",
+      "category": "Travelling/Tickets",
+      "direction": "DR"
+    },
+    {
+      "match": "INDIAN OIL",
+      "field": "counterparty",
+      "category": "Vehicle & Fuel",
+      "direction": "DR"
+    },
+    {
+      "match": "BHARAT PETRO",
+      "field": "counterparty",
+      "category": "Vehicle & Fuel",
+      "direction": "DR"
+    },
+    {
+      "match": "HP PETRO",
+      "field": "counterparty",
+      "category": "Vehicle & Fuel",
+      "direction": "DR"
+    },
+    {
+      "match": "ZOMATO",
+      "field": "counterparty",
+      "category": "Fooding",
+      "direction": "DR"
+    },
+    {
+      "match": "SWIGGY",
+      "field": "counterparty",
+      "category": "Fooding",
+      "direction": "DR"
+    },
+    {
+      "match": "MEDICAL",
+      "field": "counterparty",
+      "category": "Medical",
+      "direction": "DR"
+    },
+    {
+      "match": "PHARMA",
+      "field": "counterparty",
+      "category": "Medical",
+      "direction": "DR"
+    },
+    {
+      "match": "APOLLO",
+      "field": "counterparty",
+      "category": "Medical",
+      "direction": "DR"
+    },
+    {
+      "match": "SCHOOL",
+      "field": "counterparty",
+      "category": "Educational Expenses",
+      "direction": "DR"
+    },
+    {
+      "match": "COLLEGE",
+      "field": "counterparty",
+      "category": "Educational Expenses",
+      "direction": "DR"
+    },
+    {
+      "match": "UNIVERSITY",
+      "field": "counterparty",
+      "category": "Educational Expenses",
+      "direction": "DR"
+    },
+    {
+      "match": "ACADEMY",
+      "field": "counterparty",
+      "category": "Educational Expenses",
+      "direction": "DR"
+    }
+  ],
+  "defaults": {
+    "DR": "Misc Expenses",
+    "CR": "Other Receipts"
+  }
+}

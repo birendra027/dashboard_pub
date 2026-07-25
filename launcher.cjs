@@ -2,10 +2,12 @@
 const { spawn, spawnSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
+const os = require("os");
 const http = require("http");
 
 const ROOT = __dirname;
 const BRANCH = "main";
+const REPO_SLUG = "birendra027/dashboard_pub"; // e.g. owner/repo, for git-free ZIP updates
 const API_PORT = 4000;
 const CLIENT_PORT = 3000;
 const SERVER_DIR = path.join(ROOT, "server");
@@ -31,14 +33,54 @@ function killTracked() {
   try { fs.unlinkSync(PID_FILE); } catch (e) {}
 }
 
-// Pull the latest published build. Only tracked files move; the gitignored
-// .env / dev.db / node_modules / logs are left untouched.
+// Pull the latest published build. Local state (.env, dev.db, node_modules,
+// logs) is always preserved. Uses git when available, otherwise falls back to a
+// git-free download of the release ZIP from GitHub.
+function hasGit() {
+  return fs.existsSync(path.join(ROOT, ".git")) && ok(spawnSync("git", ["--version"], { stdio: "ignore" }));
+}
+function localVersion() {
+  const f = path.join(ROOT, "VERSION");
+  return fs.existsSync(f) ? fs.readFileSync(f, "utf8").trim() : "";
+}
 function selfUpdate() {
-  if (!fs.existsSync(path.join(ROOT, ".git"))) return;
-  if (!ok(spawnSync("git", ["--version"], { stdio: "ignore" }))) return;
-  log("Checking for updates...");
-  if (ok(spawnSync("git", ["fetch", "--quiet", "origin", BRANCH], { cwd: ROOT }))) {
-    spawnSync("git", ["reset", "--hard", "origin/" + BRANCH, "--quiet"], { cwd: ROOT });
+  if (hasGit()) {
+    log("Checking for updates (git)...");
+    if (ok(spawnSync("git", ["fetch", "--quiet", "origin", BRANCH], { cwd: ROOT }))) {
+      spawnSync("git", ["reset", "--hard", "origin/" + BRANCH, "--quiet"], { cwd: ROOT });
+    }
+    return;
+  }
+  selfUpdateZip();
+}
+// Git-free update: curl.exe + tar.exe ship with Windows 10/11. If either is
+// missing, or the machine is offline, we keep the current version silently.
+function selfUpdateZip() {
+  if (!REPO_SLUG) return;
+  if (!ok(spawnSync("curl", ["--version"], { stdio: "ignore" }))) return;
+  const rawVersion = "https://raw.githubusercontent.com/" + REPO_SLUG + "/" + BRANCH + "/VERSION";
+  const res = spawnSync("curl", ["-fsSL", rawVersion], { encoding: "utf8" });
+  if (res.status !== 0 || !res.stdout) return; // offline or not found -> keep current
+  const remote = res.stdout.trim();
+  if (!remote || remote === localVersion()) return; // already up to date
+  log("Downloading update " + remote + " (no git)...");
+  const zipUrl = "https://codeload.github.com/" + REPO_SLUG + "/zip/refs/heads/" + BRANCH;
+  const tmpZip = path.join(os.tmpdir(), "plugboard-update-" + Date.now() + ".zip");
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "plugboard-"));
+  try {
+    if (!ok(spawnSync("curl", ["-fsSL", "-o", tmpZip, zipUrl], { stdio: "ignore" }))) { log("Update download failed; keeping current version."); return; }
+    if (!ok(spawnSync("tar", ["-xf", tmpZip, "-C", tmpDir], { stdio: "ignore" }))) { log("Update extract failed; keeping current version."); return; }
+    const subs = fs.readdirSync(tmpDir).map((n) => path.join(tmpDir, n)).filter((p) => fs.statSync(p).isDirectory());
+    if (!subs.length) { log("Update archive was empty; keeping current version."); return; }
+    // The archive contains only tracked files (no .env/dev.db/node_modules/logs),
+    // so copying it over the app overwrites code while leaving local state intact.
+    fs.cpSync(subs[0], ROOT, { recursive: true, force: true });
+    log("Updated to " + remote + ".");
+  } catch (e) {
+    log("Update failed: " + e.message + " (keeping current version).");
+  } finally {
+    try { fs.rmSync(tmpZip, { force: true }); } catch (e) {}
+    try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (e) {}
   }
 }
 

@@ -11,22 +11,26 @@ Requirements:
     authentication connector)
   (Node.js is installed automatically if it is missing.)
 
-To run:
-  Double-click  Start-PlugBoard.bat
-    - pulls the latest published build (if you cloned this with git)
-    - installs Node.js if needed (Windows will ask for permission)
-    - on first run (and after each update) installs dependencies and
-      syncs the local database
-    - starts the API and UI, then opens http://localhost:3000
+To run:      double-click  Start-PlugBoard.vbs
+To restart:  double-click  Restart-PlugBoard.vbs
+To stop:     double-click  Stop-PlugBoard.vbs
+
+There are NO command windows: the API and UI run hidden in the
+background. Each launch pulls the latest published build (if you cloned
+this with git), installs anything new, then opens
+  http://localhost:3000
+in your browser. Start also restarts cleanly (it stops the previous run
+first), so you never have to close windows by hand.
 
 Staying up to date:
   If you obtained this by `git clone`, every launch auto-updates to the
-  latest published build. Your local data is preserved: server\.env,
-  server\dev.db and node_modules are never touched by the update.
+  latest build. Your local data is preserved: server\.env, server\dev.db
+  and node_modules are never touched by the update.
   If you just copied the folder (no .git), it runs but does not auto-update.
 
-The two minimized windows are the running services (API + UI).
-Close both to stop PlugBoard.
+Troubleshooting:
+  - Logs are in the logs\ folder (launcher.log, api.log, ui.log).
+  - Setup-Dependencies.bat forces a reinstall and shows progress.
 
 Notes:
   - Sign-in is handled by the configured authentication connector
@@ -35,5 +39,3 @@ Notes:
     machine. It is never published. Keep it private; back it up.
   - server\dev.db is the local database (dashboards, widgets, plugin
     data). Back it up to preserve your layouts.
-  - Some plugins launch their own bundled app on a local port the first
-    time you start them from the dashboard.

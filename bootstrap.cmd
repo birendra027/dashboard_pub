@@ -1,5 +1,4 @@
 @echo off
-title PlugBoard - Setup
 cd /d "%~dp0"
 REM --- Ensure Node.js is present, installing it if necessary ---
 where node >nul 2>nul
@@ -35,6 +34,4 @@ pause
 exit /b 0
 :NODE_OK
 for /f "tokens=*" %%v in ('node -v') do echo Node.js detected ^(%%v^).
-node "%~dp0launcher.cjs" setup
-echo Done. Use Start-PlugBoard.vbs to run.
-pause
+node "%~dp0launcher.cjs" %*

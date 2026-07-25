@@ -4,4 +4,6 @@ server/dev.db
 server/dev.db-journal
 **/node_modules/
 .installed_version
+.plugboard.pids
+logs/
 *.log

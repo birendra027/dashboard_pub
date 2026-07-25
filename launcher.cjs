@@ -28,7 +28,7 @@ function killTracked() {
   let pids = [];
   try { pids = JSON.parse(fs.readFileSync(PID_FILE, "utf8")); } catch (e) {}
   for (const pid of pids) {
-    if (pid) spawnSync("taskkill", ["/PID", String(pid), "/T", "/F"], { stdio: "ignore" });
+    if (pid) spawnSync("taskkill", ["/PID", String(pid), "/T", "/F"], { stdio: "ignore", windowsHide: true });
   }
   try { fs.unlinkSync(PID_FILE); } catch (e) {}
 }
@@ -37,7 +37,7 @@ function killTracked() {
 // logs) is always preserved. Uses git when available, otherwise falls back to a
 // git-free download of the release ZIP from GitHub.
 function hasGit() {
-  return fs.existsSync(path.join(ROOT, ".git")) && ok(spawnSync("git", ["--version"], { stdio: "ignore" }));
+  return fs.existsSync(path.join(ROOT, ".git")) && ok(spawnSync("git", ["--version"], { stdio: "ignore", windowsHide: true }));
 }
 function localVersion() {
   const f = path.join(ROOT, "VERSION");
@@ -46,8 +46,8 @@ function localVersion() {
 function selfUpdate() {
   if (hasGit()) {
     log("Checking for updates (git)...");
-    if (ok(spawnSync("git", ["fetch", "--quiet", "origin", BRANCH], { cwd: ROOT }))) {
-      spawnSync("git", ["reset", "--hard", "origin/" + BRANCH, "--quiet"], { cwd: ROOT });
+    if (ok(spawnSync("git", ["fetch", "--quiet", "origin", BRANCH], { cwd: ROOT, windowsHide: true }))) {
+      spawnSync("git", ["reset", "--hard", "origin/" + BRANCH, "--quiet"], { cwd: ROOT, windowsHide: true });
     }
     return;
   }
@@ -57,9 +57,9 @@ function selfUpdate() {
 // missing, or the machine is offline, we keep the current version silently.
 function selfUpdateZip() {
   if (!REPO_SLUG) return;
-  if (!ok(spawnSync("curl", ["--version"], { stdio: "ignore" }))) return;
+  if (!ok(spawnSync("curl", ["--version"], { stdio: "ignore", windowsHide: true }))) return;
   const rawVersion = "https://raw.githubusercontent.com/" + REPO_SLUG + "/" + BRANCH + "/VERSION";
-  const res = spawnSync("curl", ["-fsSL", rawVersion], { encoding: "utf8" });
+  const res = spawnSync("curl", ["-fsSL", rawVersion], { encoding: "utf8", windowsHide: true });
   if (res.status !== 0 || !res.stdout) return; // offline or not found -> keep current
   const remote = res.stdout.trim();
   if (!remote || remote === localVersion()) return; // already up to date
@@ -68,8 +68,8 @@ function selfUpdateZip() {
   const tmpZip = path.join(os.tmpdir(), "plugboard-update-" + Date.now() + ".zip");
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "plugboard-"));
   try {
-    if (!ok(spawnSync("curl", ["-fsSL", "-o", tmpZip, zipUrl], { stdio: "ignore" }))) { log("Update download failed; keeping current version."); return; }
-    if (!ok(spawnSync("tar", ["-xf", tmpZip, "-C", tmpDir], { stdio: "ignore" }))) { log("Update extract failed; keeping current version."); return; }
+    if (!ok(spawnSync("curl", ["-fsSL", "-o", tmpZip, zipUrl], { stdio: "ignore", windowsHide: true }))) { log("Update download failed; keeping current version."); return; }
+    if (!ok(spawnSync("tar", ["-xf", tmpZip, "-C", tmpDir], { stdio: "ignore", windowsHide: true }))) { log("Update extract failed; keeping current version."); return; }
     const subs = fs.readdirSync(tmpDir).map((n) => path.join(tmpDir, n)).filter((p) => fs.statSync(p).isDirectory());
     if (!subs.length) { log("Update archive was empty; keeping current version."); return; }
     // The archive contains only tracked files (no .env/dev.db/node_modules/logs),
@@ -91,10 +91,10 @@ function versionChanged() {
 
 function serverSetup() {
   log("Installing / updating the app (first run or update can take a minute)...");
-  if (!ok(spawnSync("npm", ["install", "--omit=dev"], { cwd: SERVER_DIR, stdio: "inherit", shell: true }))) {
+  if (!ok(spawnSync("npm", ["install", "--omit=dev"], { cwd: SERVER_DIR, stdio: "inherit", shell: true, windowsHide: true }))) {
     log("ERROR: server dependency install failed (see logs\\launcher.log)."); process.exit(1);
   }
-  if (!ok(spawnSync("npm", ["run", "db:setup"], { cwd: SERVER_DIR, stdio: "inherit", shell: true }))) {
+  if (!ok(spawnSync("npm", ["run", "db:setup"], { cwd: SERVER_DIR, stdio: "inherit", shell: true, windowsHide: true }))) {
     log("ERROR: database setup failed (see logs\\launcher.log)."); process.exit(1);
   }
   const v = path.join(ROOT, "VERSION");
@@ -110,8 +110,8 @@ function pluginAppsSetup() {
     const appDir = path.join(dir, name, "app");
     if (fs.existsSync(path.join(appDir, "package.json")) && !fs.existsSync(path.join(appDir, "node_modules"))) {
       log("Setting up plugin " + name + " (first use)...");
-      if (!ok(spawnSync("npm", ["ci", "--omit=dev"], { cwd: appDir, stdio: "inherit", shell: true }))) {
-        spawnSync("npm", ["install", "--omit=dev"], { cwd: appDir, stdio: "inherit", shell: true });
+      if (!ok(spawnSync("npm", ["ci", "--omit=dev"], { cwd: appDir, stdio: "inherit", shell: true, windowsHide: true }))) {
+        spawnSync("npm", ["install", "--omit=dev"], { cwd: appDir, stdio: "inherit", shell: true, windowsHide: true });
       }
     }
   }
@@ -149,7 +149,7 @@ killTracked(); // stop any running instance first, so Start also acts as a clean
 if (mode === "stop") { log("PlugBoard stopped."); process.exit(0); }
 
 selfUpdate();
-if (!ok(spawnSync(process.execPath, [path.join(ROOT, "prepare.cjs")], { stdio: "inherit" }))) {
+if (!ok(spawnSync(process.execPath, [path.join(ROOT, "prepare.cjs")], { stdio: "inherit", windowsHide: true }))) {
   log("ERROR: configuration step failed."); process.exit(1);
 }
 if (mode === "setup" || versionChanged()) serverSetup();

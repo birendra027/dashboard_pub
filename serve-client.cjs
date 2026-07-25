@@ -1,0 +1,68 @@
+// Static host for the PlugBoard SPA. No dependencies (Node core only).
+const http = require("http");
+const fs = require("fs");
+const path = require("path");
+
+const CLIENT_PORT = Number(process.env.CLIENT_PORT || 3000);
+const API_PORT = Number(process.env.API_PORT || 4000);
+const ROOT = path.join(__dirname, "client", "dist");
+const PROXY_PREFIXES = ["/api", "/plugin-assets"];
+
+const MIME = {
+  ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8", ".json": "application/json; charset=utf-8",
+  ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg", ".gif": "image/gif", ".ico": "image/x-icon",
+  ".woff": "font/woff", ".woff2": "font/woff2", ".ttf": "font/ttf", ".map": "application/json",
+};
+
+function proxy(req, res) {
+  const options = {
+    host: "127.0.0.1", port: API_PORT, method: req.method,
+    path: req.url, headers: { ...req.headers, host: `127.0.0.1:${API_PORT}` },
+  };
+  const upstream = http.request(options, (up) => {
+    res.writeHead(up.statusCode || 502, up.headers);
+    up.pipe(res);
+  });
+  upstream.on("error", () => {
+    res.writeHead(502, { "content-type": "application/json" });
+    res.end(JSON.stringify({ error: "The PlugBoard API is not reachable yet. Is it still starting?" }));
+  });
+  req.pipe(upstream);
+}
+
+function serveStatic(req, res) {
+  // Strip query string, block path traversal, default to index.html.
+  const urlPath = decodeURIComponent((req.url || "/").split("?")[0]);
+  let filePath = path.normalize(path.join(ROOT, urlPath));
+  if (!filePath.startsWith(ROOT)) {
+    res.writeHead(403).end("Forbidden");
+    return;
+  }
+  fs.stat(filePath, (err, stat) => {
+    if (!err && stat.isDirectory()) filePath = path.join(filePath, "index.html");
+    fs.readFile(filePath, (err2, data) => {
+      if (err2) {
+        // SPA fallback: unknown non-file routes are client-side routes.
+        fs.readFile(path.join(ROOT, "index.html"), (err3, html) => {
+          if (err3) { res.writeHead(404).end("Not found"); return; }
+          res.writeHead(200, { "content-type": MIME[".html"] });
+          res.end(html);
+        });
+        return;
+      }
+      const type = MIME[path.extname(filePath).toLowerCase()] || "application/octet-stream";
+      res.writeHead(200, { "content-type": type });
+      res.end(data);
+    });
+  });
+}
+
+http.createServer((req, res) => {
+  const url = req.url || "/";
+  if (PROXY_PREFIXES.some((p) => url === p || url.startsWith(p + "/"))) proxy(req, res);
+  else serveStatic(req, res);
+}).listen(CLIENT_PORT, () => {
+  console.log(`PlugBoard UI on http://localhost:${CLIENT_PORT}  (API proxied to :${API_PORT})`);
+});

@@ -1,0 +1,7 @@
+# Per-machine state — never published, never overwritten by `git pull`.
+server/.env
+server/dev.db
+server/dev.db-journal
+**/node_modules/
+.installed_version
+*.log

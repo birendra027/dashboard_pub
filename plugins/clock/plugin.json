@@ -1,0 +1,16 @@
+{
+  "id": "clock",
+  "name": "Clock",
+  "version": "1.0.0",
+  "description": "A live clock. Click the time to switch between 12h and 24h formats.",
+  "frontend": { "entry": "dist/frontend.js" },
+  "widgets": [
+    {
+      "type": "clock",
+      "name": "Clock",
+      "description": "Live time and date",
+      "defaultSize": { "w": 3, "h": 3 },
+      "minSize": { "w": 2, "h": 2 }
+    }
+  ]
+}

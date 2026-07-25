@@ -1,0 +1,17 @@
+{
+  "id": "system-stats",
+  "name": "System Stats",
+  "version": "1.0.0",
+  "description": "Live server metrics (memory, CPU count, uptime) fetched from a plugin backend.",
+  "frontend": { "entry": "dist/frontend.js" },
+  "backend": { "entry": "dist/backend.js" },
+  "widgets": [
+    {
+      "type": "stats",
+      "name": "Server Stats",
+      "description": "Memory usage, uptime and host info, refreshed every 5s",
+      "defaultSize": { "w": 4, "h": 4 },
+      "minSize": { "w": 3, "h": 3 }
+    }
+  ]
+}

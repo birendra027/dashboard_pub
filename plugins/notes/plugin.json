@@ -1,0 +1,17 @@
+{
+  "id": "notes",
+  "name": "Sticky Notes",
+  "version": "1.0.0",
+  "description": "Personal notes saved per user via the plugin storage API.",
+  "frontend": { "entry": "dist/frontend.js" },
+  "backend": { "entry": "dist/backend.js" },
+  "widgets": [
+    {
+      "type": "notes",
+      "name": "Notes",
+      "description": "A personal notepad that autosaves",
+      "defaultSize": { "w": 4, "h": 5 },
+      "minSize": { "w": 2, "h": 3 }
+    }
+  ]
+}

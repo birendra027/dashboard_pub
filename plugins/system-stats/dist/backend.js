@@ -1,0 +1,1 @@
+import e from"node:os";var o=t=>{t.addRoute("get","/stats",()=>({hostname:e.hostname(),platform:`${e.platform()} ${e.release()}`,cpus:e.cpus().length,uptimeSeconds:Math.floor(e.uptime()),totalMem:e.totalmem(),freeMem:e.freemem()}))},r=o;export{r as default};

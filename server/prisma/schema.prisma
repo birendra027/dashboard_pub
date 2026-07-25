@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  passwordHash String
+  name         String
+  role         String      @default("USER") // "ADMIN" | "USER"
+  dashboards   Dashboard[]
+  createdAt    DateTime    @default(now())
+}
+
+model Dashboard {
+  id        String            @id @default(cuid())
+  name      String
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  widgets   DashboardWidget[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+model DashboardWidget {
+  id          String    @id
+  dashboardId String
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+  pluginId    String
+  widgetType  String
+  config      String    @default("{}") // JSON
+  x           Int
+  y           Int
+  w           Int
+  h           Int
+}
+
+model PluginState {
+  id      String  @id // plugin id
+  enabled Boolean @default(true)
+}
+
+// Per-plugin key-value storage exposed to plugin backends.
+// userId "" means plugin-global data.
+model PluginData {
+  id       String @id @default(cuid())
+  pluginId String
+  userId   String @default("")
+  key      String
+  value    String // JSON
+
+  @@unique([pluginId, userId, key])
+}

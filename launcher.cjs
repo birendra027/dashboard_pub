@@ -117,17 +117,32 @@ function pluginAppsSetup() {
   }
 }
 
+// This launcher is a persistent SUPERVISOR: it stays alive and owns the API and
+// UI as children (NOT detached), so they inherit its hidden console (no popup
+// windows) and can all be stopped together by killing this process tree.
+const children = [];
 function startService(name, args, cwd, extraEnv) {
   const out = fs.openSync(path.join(LOG_DIR, name + ".log"), "a");
   const child = spawn(process.execPath, args, {
     cwd: cwd,
     env: Object.assign({}, process.env, { NODE_ENV: "production" }, extraEnv || {}),
-    detached: true,        // survives launcher exit
-    windowsHide: true,     // no console window
+    windowsHide: true, // hidden; inherits the supervisor's hidden console
     stdio: ["ignore", out, out],
   });
-  child.unref();
-  return child.pid;
+  children.push(child);
+  return child;
+}
+
+let shuttingDown = false;
+function shutdownAll(reason) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  log("Shutting down (" + reason + ")...");
+  for (const c of children) { try { c.kill(); } catch (e) {} }
+  try { fs.unlinkSync(PID_FILE); } catch (e) {}
+  // Kill our whole tree to also stop plugin apps the API spawned.
+  spawnSync("taskkill", ["/PID", String(process.pid), "/T", "/F"], { stdio: "ignore", windowsHide: true });
+  process.exit(0);
 }
 
 function openBrowserWhenReady() {
@@ -137,9 +152,9 @@ function openBrowserWhenReady() {
     const req = http.get({ host: "127.0.0.1", port: CLIENT_PORT, path: "/" }, (res) => {
       res.destroy(); clearInterval(timer);
       spawnSync("cmd", ["/c", "start", "", url], { windowsHide: true });
-      log("Opened " + url); process.exit(0);
+      log("Opened " + url);
     });
-    req.on("error", () => { if (++tries > 30) { clearInterval(timer); log("UI slow to start; open " + url + " manually."); process.exit(0); } });
+    req.on("error", () => { if (++tries > 30) { clearInterval(timer); log("UI slow to start; open " + url + " manually."); } });
     req.setTimeout(1000, () => req.destroy());
   }, 1000);
 }
@@ -156,8 +171,17 @@ if (mode === "setup" || versionChanged()) serverSetup();
 pluginAppsSetup();
 if (mode === "setup") { log("Setup complete."); process.exit(0); }
 
-const apiPid = startService("api", [path.join("dist", "index.js")], SERVER_DIR, {});
-const uiPid = startService("ui", ["serve-client.cjs"], ROOT, { API_PORT: String(API_PORT), CLIENT_PORT: String(CLIENT_PORT) });
-fs.writeFileSync(PID_FILE, JSON.stringify([apiPid, uiPid]));
-log("Started PlugBoard (API pid " + apiPid + ", UI pid " + uiPid + ").");
+// The pidfile holds the supervisor's own pid; killing its tree stops everything.
+fs.writeFileSync(PID_FILE, JSON.stringify([process.pid]));
+const api = startService("api", [path.join("dist", "index.js")], SERVER_DIR, {});
+// The UI host receives our pid so it can stop the whole app when the browser closes.
+const ui = startService("ui", ["serve-client.cjs"], ROOT, {
+  API_PORT: String(API_PORT),
+  CLIENT_PORT: String(CLIENT_PORT),
+  SUPERVISOR_PID: String(process.pid),
+});
+log("Started PlugBoard supervisor (pid " + process.pid + ", API " + api.pid + ", UI " + ui.pid + ").");
+api.on("exit", () => shutdownAll("API stopped"));
+ui.on("exit", () => shutdownAll("UI stopped"));
 openBrowserWhenReady();
+// The non-detached children keep this process alive; it exits via shutdownAll.

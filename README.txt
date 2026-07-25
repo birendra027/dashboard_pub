@@ -22,6 +22,12 @@ this with git), installs anything new, then opens
 in your browser. Start also restarts cleanly (it stops the previous run
 first), so you never have to close windows by hand.
 
+Closing the app:
+  Just close the dashboard browser tab. A few seconds later PlugBoard
+  stops completely on its own (API, UI, and any running plugin apps).
+  Refreshing the page does NOT stop it. To use it again, run
+  Start-PlugBoard.vbs.
+
 Staying up to date:
   If you obtained this by `git clone`, every launch auto-updates to the
   latest build. Your local data is preserved: server\.env, server\dev.db

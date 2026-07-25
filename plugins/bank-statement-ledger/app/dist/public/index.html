@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Statement Ledger</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="theme-init.js"></script>
+</head>
+<body>
+  <header>
+    <div class="titles">
+      <h1>Statement Ledger</h1>
+      <p class="sub">Upload a bank statement PDF to produce a categorised ledger and Excel export.</p>
+    </div>
+    <button type="button" id="theme-toggle" title="Switch between light and dark">
+      <span id="theme-icon">&#9789;</span> <span id="theme-label">Dark</span>
+    </button>
+  </header>
+
+  <main>
+    <section class="card" id="upload-card">
+      <h2>1 &middot; Upload</h2>
+      <form id="upload-form">
+        <div class="field">
+          <label for="bank">Bank</label>
+          <select id="bank" name="bankId">
+            <option value="auto">Auto-detect</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="file">Statement PDF</label>
+          <input type="file" id="file" name="file" accept="application/pdf,.pdf" required />
+        </div>
+
+        <div class="field" id="password-field" hidden>
+          <label for="password">PDF password</label>
+          <input type="password" id="password" name="password" autocomplete="off" />
+          <p class="hint">This PDF is encrypted. The password is used to open it and is never saved.</p>
+        </div>
+
+        <button type="submit" id="submit-btn">Parse statement</button>
+      </form>
+      <p id="status" class="status" hidden></p>
+    </section>
+
+    <section class="card" id="review-card" hidden>
+      <h2>2 &middot; Review uncategorised</h2>
+      <p class="sub" id="review-intro"></p>
+      <div id="review-list"></div>
+      <p id="review-done" class="ok" hidden>Everything is categorised.</p>
+    </section>
+
+    <section class="card" id="summary-card" hidden>
+      <h2>3 &middot; Summary</h2>
+      <div id="meta" class="meta"></div>
+      <div id="ledger"></div>
+      <div id="warnings"></div>
+      <button id="export-btn" type="button">Download Excel (.xlsx)</button>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

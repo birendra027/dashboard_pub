@@ -4,7 +4,7 @@
 // SyntaxError from inside a dependency. Deliberately ES5 (var, no arrows, no
 // destructuring) so an ancient Node reaches this message rather than choking on
 // the syntax below it.
-var NODE_MIN = 20;
+var NODE_MIN = 24;
 var nodeMajor = parseInt(String(process.versions.node).split(".")[0], 10);
 if (!(nodeMajor >= NODE_MIN)) {
   var tooOld =

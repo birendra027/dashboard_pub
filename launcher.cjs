@@ -1,4 +1,25 @@
 "use strict";
+// Second line of defence behind bootstrap.cmd's Node gate: refuse to run on a
+// Node too old for npm/Prisma instead of failing later with a cryptic
+// SyntaxError from inside a dependency. Deliberately ES5 (var, no arrows, no
+// destructuring) so an ancient Node reaches this message rather than choking on
+// the syntax below it.
+var NODE_MIN = 20;
+var nodeMajor = parseInt(String(process.versions.node).split(".")[0], 10);
+if (!(nodeMajor >= NODE_MIN)) {
+  var tooOld =
+    "PlugBoard needs Node.js v" + NODE_MIN + " or newer, but this is v" + process.versions.node + " (" + process.execPath + ").\n" +
+    "Close this window, then run Setup-Dependencies.bat and let it install the current Node.js LTS.";
+  try {
+    require("fs").appendFileSync(
+      require("path").join(__dirname, "logs", "launcher.log"),
+      "[" + new Date().toISOString() + "] " + tooOld.replace(/\n/g, " ") + "\n"
+    );
+  } catch (e) {}
+  console.error(tooOld);
+  process.exit(1);
+}
+
 const { spawn, spawnSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
@@ -91,6 +112,14 @@ function versionChanged() {
 
 function serverSetup() {
   log("Installing / updating the app (first run or update can take a minute)...");
+  // node_modules but no .installed_version means the last setup never finished
+  // — classically because an ancient Node/npm was on PATH and left a tree this
+  // npm would otherwise have to reconcile. Start that case from scratch.
+  const modules = path.join(SERVER_DIR, "node_modules");
+  if (fs.existsSync(modules) && !fs.existsSync(path.join(ROOT, ".installed_version"))) {
+    log("Previous install did not complete - clearing server\\node_modules for a clean install.");
+    try { fs.rmSync(modules, { recursive: true, force: true }); } catch (e) { log("Could not clear node_modules: " + e.message); }
+  }
   if (!ok(spawnSync("npm", ["install", "--omit=dev"], { cwd: SERVER_DIR, stdio: "inherit", shell: true, windowsHide: true }))) {
     log("ERROR: server dependency install failed (see logs\\launcher.log)."); process.exit(1);
   }

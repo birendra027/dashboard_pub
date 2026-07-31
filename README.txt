@@ -9,7 +9,9 @@ Requirements:
   - Windows 10/11
   - Internet (to auto-update, install dependencies, and reach the
     authentication connector)
-  (Node.js is installed automatically if it is missing.)
+  - Node.js v20 or newer (installed automatically if it is
+    missing or too old; an older Node already on the machine is left
+    alone, PlugBoard just uses the newer one)
 
 To run:      double-click  Start-PlugBoard.vbs
 To restart:  double-click  Restart-PlugBoard.vbs
@@ -37,6 +39,8 @@ Staying up to date:
 Troubleshooting:
   - Logs are in the logs\ folder (launcher.log, api.log, ui.log).
   - Setup-Dependencies.bat forces a reinstall and shows progress.
+  - "Node.js v... is too old": run Setup-Dependencies.bat and approve
+    the administrator prompt so it can install Node.js v20 LTS.
 
 Notes:
   - Sign-in is handled by the configured authentication connector

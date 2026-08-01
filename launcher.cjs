@@ -202,7 +202,22 @@ if (mode === "setup") { log("Setup complete."); process.exit(0); }
 
 // The pidfile holds the supervisor's own pid; killing its tree stops everything.
 fs.writeFileSync(PID_FILE, JSON.stringify([process.pid]));
-const api = startService("api", [path.join("dist", "index.js")], SERVER_DIR, {});
+let api;
+function startApi() {
+  api = startService("api", [path.join("dist", "index.js")], SERVER_DIR, {});
+  api.on("exit", function (code) {
+    // Exit code 42 = the app asked to restart (e.g. after installing a plugin).
+    // Respawn the API ONLY; the UI host stays up so the browser tab is preserved
+    // (no new tab). Any other exit is a real stop/crash -> take everything down.
+    if (code === 42 && !shuttingDown) {
+      log("API requested a restart; respawning (UI host + browser tab stay up).");
+      setTimeout(startApi, 300);
+    } else {
+      shutdownAll("API stopped");
+    }
+  });
+}
+startApi();
 // The UI host receives our pid so it can stop the whole app when the browser closes.
 const ui = startService("ui", ["serve-client.cjs"], ROOT, {
   API_PORT: String(API_PORT),
@@ -210,7 +225,6 @@ const ui = startService("ui", ["serve-client.cjs"], ROOT, {
   SUPERVISOR_PID: String(process.pid),
 });
 log("Started PlugBoard supervisor (pid " + process.pid + ", API " + api.pid + ", UI " + ui.pid + ").");
-api.on("exit", () => shutdownAll("API stopped"));
 ui.on("exit", () => shutdownAll("UI stopped"));
 openBrowserWhenReady();
 // The non-detached children keep this process alive; it exits via shutdownAll.

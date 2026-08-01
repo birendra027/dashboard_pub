@@ -204,7 +204,10 @@ if (mode === "setup") { log("Setup complete."); process.exit(0); }
 fs.writeFileSync(PID_FILE, JSON.stringify([process.pid]));
 let api;
 function startApi() {
-  api = startService("api", [path.join("dist", "index.js")], SERVER_DIR, {});
+  // PB_RESTART_SUPPORTED tells the API this supervisor will RESPAWN it on exit 42
+  // (rather than shutting everything down). The client checks this before doing an
+  // auto-restart, so an OLD launcher (without this flag) never gets the app killed.
+  api = startService("api", [path.join("dist", "index.js")], SERVER_DIR, { PB_RESTART_SUPPORTED: "1" });
   api.on("exit", function (code) {
     // Exit code 42 = the app asked to restart (e.g. after installing a plugin).
     // Respawn the API ONLY; the UI host stays up so the browser tab is preserved

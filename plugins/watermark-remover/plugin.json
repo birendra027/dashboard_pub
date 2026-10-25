@@ -1,7 +1,7 @@
 {
   "id": "watermark-remover",
   "name": "Watermark Remover",
-  "version": "1.0.23",
+  "version": "1.0.28",
   "description": "Remove camera watermarks, model stamps and dates from photos and videos. Uses AI inpainting to reconstruct the region. Everything runs locally with no uploads.",
   "frontend": {
     "entry": "dist/frontend.js"
@@ -14,8 +14,6 @@
       "type": "watermark-remover",
       "name": "Watermark Remover",
       "description": "Remove camera watermarks from photos and videos",
-      "runnable": true,
-      "stopPath": "/_stop",
       "defaultSize": {
         "w": 12,
         "h": 10

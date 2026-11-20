@@ -14,6 +14,8 @@
       "type": "watermark-remover",
       "name": "Watermark Remover",
       "description": "Remove camera watermarks from photos and videos",
+      "runnable": true,
+      "stopPath": "/_stop",
       "defaultSize": {
         "w": 12,
         "h": 10
